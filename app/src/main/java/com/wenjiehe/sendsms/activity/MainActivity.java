@@ -1,4 +1,4 @@
-package com.wenjiehe.sendsms;
+package com.wenjiehe.sendsms.activity;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,7 +21,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.idescout.sql.SqlScoutServer;
+import com.wenjiehe.sendsms.R;
+import com.wenjiehe.sendsms.entity.PhoneNumber;
+
+import org.litepal.crud.DataSupport;
+import org.litepal.tablemanager.Connector;
+
 import java.util.List;
+
+import static android.R.attr.phoneNumber;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -51,6 +59,9 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        SqlScoutServer.create(this, getPackageName());
+        Connector.getDatabase();
     }
 
     @Override
@@ -91,19 +102,26 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_tel_list) {
+            Intent intent =new Intent(MainActivity.this,PhoneBooksActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_send_sms) {
+            PhoneNumber phoneNumber = new PhoneNumber(0,"hewenjie","18012345678");
+            phoneNumber.save();
+            PhoneNumber phoneNumber2 = new PhoneNumber(1,"zhangsan","12332112332");
+            phoneNumber2.save();
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_edit_sms) {
+            List<PhoneNumber> list = DataSupport.findAll(PhoneNumber.class);
+            Toast.makeText(MainActivity.this,list.get(0).toString(),Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this,list.get(1).toString(),Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_send_sms_list) {
 
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
+        } /*else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
-            sendSMS("10086","1234567890收到请回复！！！！！！");
-        }
+            sendSMS(this,"10086","1234567890收到请回复！！！！！！");
+        }*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -167,7 +185,7 @@ public class MainActivity extends AppCompatActivity
      * @param phoneNumber
      * @param message
      */
-    public void sendSMS(String phoneNumber, String message) {
+    public void sendSMS(Context context,String phoneNumber, String message) {
         //处理返回的发送状态
         String SENT_SMS_ACTION = "SENT_SMS_ACTION";
         Intent sentIntent = new Intent(SENT_SMS_ACTION);
