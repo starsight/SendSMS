@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,5 +51,9 @@ public class Utils {
         DisplayMetrics outMetrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics( outMetrics);
         return outMetrics .widthPixels ;
+    }
+
+    public static void showToast(Context context,String str){
+        Toast.makeText(context,str,Toast.LENGTH_SHORT).show();
     }
 }

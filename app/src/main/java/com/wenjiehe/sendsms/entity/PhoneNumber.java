@@ -18,6 +18,14 @@ public class PhoneNumber extends DataSupport{
         super();
     }
 
+    public PhoneNumber(int table, String number) {
+        super();
+        ownTable = table;
+        this.name = number;
+        this.number = number;
+        isSendSMS= false;
+    }
+
     public PhoneNumber(int table, String name, String number) {
         super();
         ownTable = table;

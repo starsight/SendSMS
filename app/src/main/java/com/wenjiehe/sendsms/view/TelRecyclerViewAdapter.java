@@ -12,6 +12,8 @@ import com.wenjiehe.sendsms.R;
 import com.wenjiehe.sendsms.Utils;
 import com.wenjiehe.sendsms.entity.PhoneNumber;
 
+import org.litepal.crud.DataSupport;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,9 +106,19 @@ public class TelRecyclerViewAdapter extends RecyclerView.Adapter<TelRecyclerView
     }
 
     public void removeData(int position){
+        DataSupport.delete(PhoneNumber.class,mDatas.get(position).getId());
         mDatas.remove(position);
         notifyItemRemoved(position);
+    }
 
+    public void removeAllData(int phone_book_num){
+        notifyItemRangeRemoved(0,mDatas.size());
+        DataSupport.deleteAll(PhoneNumber.class,"owntable = ?",phone_book_num+"");
+        mDatas.clear();
+    }
+    public void changeAllData(List<PhoneNumber> list){
+        mDatas = list;
+        notifyDataSetChanged();
     }
 
     /**
