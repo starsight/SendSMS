@@ -30,6 +30,8 @@
         </activity>
         <activity android:name=".activity.EditTelActivity">
         </activity>
+        <activity android:name=".activity.SendSMSActivity">
+        </activity>
     </application>
 
 </manifest>

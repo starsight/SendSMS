@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="phonebook">
+        <item>电话本一</item>
+        <item>电话本二</item>
+        <item>电话本三</item>
+        <item>电话本四</item>
+        <item>电话本五</item>
+        <item>电话本六</item>
+        <item>电话本七</item>
+        <item>电话本八</item>
+        <item>电话本九</item>
+        <item>电话本十</item>
+    </string-array>
+
+    <string-array name="sendtime">
+        <item>15分钟</item>
+        <item>30分钟</item>
+        <item>60分钟</item>
+    </string-array>
+
+</resources>

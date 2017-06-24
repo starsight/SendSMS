@@ -106,15 +106,13 @@ public class MainActivity extends AppCompatActivity
             Intent intent =new Intent(MainActivity.this,PhoneBooksActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_send_sms) {
+            Intent intent =new Intent(MainActivity.this,SendSMSActivity.class);
+            startActivity(intent);
+        } else if (id == R.id.nav_edit_sms) {
             PhoneNumber phoneNumber = new PhoneNumber(0,"hewenjie","18012345678");
             phoneNumber.save();
             PhoneNumber phoneNumber2 = new PhoneNumber(1,"zhangsan","12332112332");
             phoneNumber2.save();
-
-        } else if (id == R.id.nav_edit_sms) {
-            List<PhoneNumber> list = DataSupport.findAll(PhoneNumber.class);
-            Toast.makeText(MainActivity.this,list.get(0).toString(),Toast.LENGTH_SHORT).show();
-            Toast.makeText(MainActivity.this,list.get(1).toString(),Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_send_sms_list) {
 
         } /*else if (id == R.id.nav_share) {

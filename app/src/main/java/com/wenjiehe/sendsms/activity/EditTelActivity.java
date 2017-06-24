@@ -22,14 +22,20 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static android.R.id.list;
+
 public class EditTelActivity extends AppCompatActivity {
 
-    private int phone_book_num=0;
+    private int phone_book_num = 0;
 
-    private List<PhoneNumber> newAddTel = new ArrayList<>();//新添加的电话号码
+    private int editNum = 10;
+    //private List<PhoneNumber> newAddTel = new ArrayList<>();//新添加的电话号码
+    //private PhoneNumber[] newTel = new PhoneNumber[editNum];
+    private List<PhoneNumber> newTelList = new ArrayList<>();
 
     private boolean hasSave = true;
-    private List<Integer> notTel = new ArrayList<>();
+
+    //private List<Integer> notTel = new ArrayList<>();
 
     @BindView(R.id.activity_edit_tel_et0)
     EditText editText0;
@@ -72,53 +78,38 @@ public class EditTelActivity extends AppCompatActivity {
         editTextList.add(editText8);
         editTextList.add(editText9);
 
+
         Intent intent = getIntent();
-        phone_book_num = intent.getIntExtra("phonebook",0);
+        phone_book_num = intent.getIntExtra("phonebook", 0);
     }
 
-    private void addTextListener(){
-        editText0.addTextChangedListener(new MyTextWatcher(editText0,0));
-        editText1.addTextChangedListener(new MyTextWatcher(editText1,1));
-        editText2.addTextChangedListener(new MyTextWatcher(editText2,2));
-        editText3.addTextChangedListener(new MyTextWatcher(editText3,3));
-        editText4.addTextChangedListener(new MyTextWatcher(editText4,4));
-        editText5.addTextChangedListener(new MyTextWatcher(editText5,5));
-        editText6.addTextChangedListener(new MyTextWatcher(editText6,6));
-        editText7.addTextChangedListener(new MyTextWatcher(editText7,7));
-        editText8.addTextChangedListener(new MyTextWatcher(editText8,8));
-        editText9.addTextChangedListener(new MyTextWatcher(editText9,9));
+    private void addTextListener() {
+        editText0.addTextChangedListener(new MyTextWatcher(editText0, 0));
+        editText1.addTextChangedListener(new MyTextWatcher(editText1, 1));
+        editText2.addTextChangedListener(new MyTextWatcher(editText2, 2));
+        editText3.addTextChangedListener(new MyTextWatcher(editText3, 3));
+        editText4.addTextChangedListener(new MyTextWatcher(editText4, 4));
+        editText5.addTextChangedListener(new MyTextWatcher(editText5, 5));
+        editText6.addTextChangedListener(new MyTextWatcher(editText6, 6));
+        editText7.addTextChangedListener(new MyTextWatcher(editText7, 7));
+        editText8.addTextChangedListener(new MyTextWatcher(editText8, 8));
+        editText9.addTextChangedListener(new MyTextWatcher(editText9, 9));
     }
 
-    private String removeSpace(String str){
-        if(str.length()==13){
+    private String removeSpace(String str) {
+        if (str.length() == 13) {
             return str.replace(" ", "");
-        }
-        else
+        } else
             return "";
     }
 
-    private void changeFocus(int position){
+    private void changeFocus(int position) {
+        hasSave= false;
         //Utils.showToast(EditTelActivity.this,position+"");
-        EditText editText = editTextList.get(position);
-        String str  = removeSpace(editText.getText().toString());
-        if(Utils.checkPhoneNumber(str)){
-            if(notTel.contains(position)){
-                notTel.remove(position);
-                Utils.showToast(EditTelActivity.this,position+1+" 已修改成正确的号码");
-            }
-
-            hasSave =false;
-            newAddTel.add(new PhoneNumber(phone_book_num,str));
-            if(position!=9)
-                editTextList.get(position+1).requestFocus();
-            else
-                editText9.clearFocus();
-        }else{
-            notTel.add(position);
-            Utils.showToast(EditTelActivity.this,"新增"+(position+1)+":不是一个正确的电话号码");
-        }
-
-
+        if (position != (editNum - 1))//最后一项
+            editTextList.get(position + 1).requestFocus();
+        else
+            editText9.clearFocus();
     }
 
     @Override
@@ -128,39 +119,54 @@ public class EditTelActivity extends AppCompatActivity {
         return true;
     }
 
+    public void getPhoneNumberList() {
+        newTelList.clear();
+        for (int position = 0; position < editNum && position < editTextList.size(); position++) {
+            EditText editText = editTextList.get(position);
+            String str = removeSpace(editText.getText().toString());
+            if("".equals(str)){
+                continue;
+            }else if(str.length()!=11){
+                Utils.showToast(EditTelActivity.this, "新增" +(position + 1) + ":不是一个正确的电话号码，不保存！");
+                continue;
+            }
+
+            if (Utils.checkPhoneNumber(str)) {
+                newTelList.add(new PhoneNumber(phone_book_num, str));
+            } else {
+                Utils.showToast(EditTelActivity.this, "新增" + (position + 1) + ":不是一个正确的电话号码，不保存！");
+                continue;
+            }
+            editText.setText("");
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-            switch (item.getItemId()){
-                case R.id.activity_eit_tel_save:
-                    if(!hasSave) {
-                        if (notTel.isEmpty()) {
-                            if (!newAddTel.isEmpty()) {
-                                DataSupport.saveAll(newAddTel);
-                                newAddTel.clear();
-                                for (EditText editText : editTextList) {
-                                    editText.setText("");
-                                }
-                                editText0.requestFocus();
-                                hasSave =true;
+        switch (item.getItemId()) {
+            case R.id.activity_eit_tel_save:
+                if (!hasSave) {
+                    getPhoneNumberList();
+                    if (!newTelList.isEmpty()) {
+                        DataSupport.saveAll(newTelList);
+                        newTelList.clear();
 
+                        editText0.requestFocus();
+                        editText0.clearFocus();
 
-                                Utils.showToast(EditTelActivity.this, "保存成功！");
-                            }
-                        }else {
-                            StringBuilder stringBuilder = new StringBuilder();
-                            for (int str :notTel){
-                                stringBuilder.append("位置"+str+" ");
-                            }
+                        hasSave = true;
 
-                            Utils.showToast(EditTelActivity.this, stringBuilder.toString()+"不是正确的电话号码");
-                        }
+                        Utils.showToast(EditTelActivity.this, "保存成功！");
                     }else{
-                        Utils.showToast(EditTelActivity.this, "已全部保存！");
+                        Utils.showToast(EditTelActivity.this, "请输入号码！");
                     }
-                    break;
-                default:
-                    break;
-            }
+                } else {
+                    Utils.showToast(EditTelActivity.this, "已全部保存！");
+                }
+                break;
+            default:
+                break;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -169,7 +175,7 @@ public class EditTelActivity extends AppCompatActivity {
         private EditText editText;
         private int position;
 
-        MyTextWatcher(EditText editText,int position){
+        MyTextWatcher(EditText editText, int position) {
             this.editText = editText;
             this.position = position;
         }
@@ -177,17 +183,6 @@ public class EditTelActivity extends AppCompatActivity {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            if(s.toString().length()==13){
-                String str = removeSpace(s.toString());
-                if(!newAddTel.isEmpty()) {
-                    for (PhoneNumber phoneNumber : newAddTel) {
-                        if (phoneNumber.getNumber().equals(str)) {
-                            newAddTel.remove(phoneNumber);
-                            //Utils.showToast(EditTelActivity.this,"remove!");
-                        }
-                    }
-                }
-            }
         }
 
         @Override
@@ -225,10 +220,10 @@ public class EditTelActivity extends AppCompatActivity {
         public void afterTextChanged(Editable s) {
             if (s.length() == 13) {
                 changeFocus(position);
-            }else if(s.length()>13){
-                Utils.showToast(EditTelActivity.this,"不是一个正确的电话号码!");
-                if(!notTel.contains(position))
-                    notTel.add(position);
+            } else if (s.length() > 13 && (s.length() % 4 == 0)) {
+                Utils.showToast(EditTelActivity.this, "不是一个正确的电话号码!");
+                //if(!notTel.contains(position))
+                //    notTel.add(position);
             }
 
         }
