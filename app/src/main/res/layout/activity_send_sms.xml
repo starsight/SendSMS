@@ -19,17 +19,11 @@
             android:layout_height="64dp"
             android:spinnerMode="dialog" />
 
-        <TextView
+        <Button
+            android:id="@+id/send_sms"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="发送完总时间"/>
+            android:text="开始发送"/>
 
-        <Spinner
-            android:id="@+id/spin_two"
-            android:entries="@array/sendtime"
-            android:layout_width="140dp"
-            android:layout_height="64dp"
-            android:spinnerMode="dialog" />
     </LinearLayout>
 </LinearLayout>

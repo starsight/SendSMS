@@ -6,6 +6,7 @@ import android.util.TypedValue;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +52,12 @@ public class Utils {
         DisplayMetrics outMetrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics( outMetrics);
         return outMetrics .widthPixels ;
+    }
+
+    public static int generateRandomTime(int min,int max){
+        Random rand = new Random();
+        int i = rand.nextInt(max-min)+min;
+        return i;
     }
 
     public static void showToast(Context context,String str){

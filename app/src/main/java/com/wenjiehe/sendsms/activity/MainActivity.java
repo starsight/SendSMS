@@ -19,21 +19,45 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.idescout.sql.SqlScoutServer;
 import com.wenjiehe.sendsms.R;
+import com.wenjiehe.sendsms.Utils;
 import com.wenjiehe.sendsms.entity.PhoneNumber;
 
 import org.litepal.crud.DataSupport;
 import org.litepal.tablemanager.Connector;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 import static android.R.attr.phoneNumber;
+import static com.wenjiehe.sendsms.R.id.spin_one;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemSelectedListener {
+
+    @BindView(spin_one)
+    Spinner spinner_tel_book;
+
+
+    @BindView(R.id.send_sms)
+    Button send_sms;
+
+    private int tel_book = 0;//0-9 电话本一~十
+    private int sendtime = 0;
+
+    List<PhoneNumber> phoneBook = new ArrayList<>();
+    Map<String,List<PhoneNumber>> hasSendPhoneNum = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +65,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -60,8 +75,33 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        ButterKnife.bind(this);
+
         SqlScoutServer.create(this, getPackageName());
         Connector.getDatabase();
+
+        spinner_tel_book.setOnItemSelectedListener(this);
+        send_sms.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                phoneBook = DataSupport.where("owntable = ?",tel_book+"").find(PhoneNumber.class);
+                Utils.showToast(MainActivity.this,tel_book+"-"+sendtime);
+            }
+        });
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (parent.getId()) {
+            case R.id.spin_one:
+                tel_book = position;
+                //Utils.showToast(MainActivity.this,parent.getItemAtPosition(position).toString());
+                break;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
     }
 
     @Override
@@ -106,16 +146,14 @@ public class MainActivity extends AppCompatActivity
             Intent intent =new Intent(MainActivity.this,PhoneBooksActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_send_sms) {
-            Intent intent =new Intent(MainActivity.this,SendSMSActivity.class);
-            startActivity(intent);
+           // Intent intent =new Intent(MainActivity.this,SendSMSActivity.class);
+           // startActivity(intent);
         } else if (id == R.id.nav_edit_sms) {
             PhoneNumber phoneNumber = new PhoneNumber(0,"hewenjie","18012345678");
             phoneNumber.save();
             PhoneNumber phoneNumber2 = new PhoneNumber(1,"zhangsan","12332112332");
             phoneNumber2.save();
-        } else if (id == R.id.nav_send_sms_list) {
-
-        } /*else if (id == R.id.nav_share) {
+        }/*else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
             sendSMS(this,"10086","1234567890收到请回复！！！！！！");

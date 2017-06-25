@@ -13,10 +13,4 @@
         <item>电话本十</item>
     </string-array>
 
-    <string-array name="sendtime">
-        <item>15分钟</item>
-        <item>30分钟</item>
-        <item>60分钟</item>
-    </string-array>
-
 </resources>
