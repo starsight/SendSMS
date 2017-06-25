@@ -1,5 +1,6 @@
 package com.wenjiehe.sendsms.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -7,9 +8,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
 import android.view.View;
@@ -72,6 +77,9 @@ public class MainActivity extends AppCompatActivity
     List<PhoneNumber> phoneBook = new ArrayList<>();
     List<PhoneNumber> hasSendPhoneNum = new ArrayList<>();
 
+    private BroadcastReceiver broadcastReceiver1;
+    private BroadcastReceiver broadcastReceiver2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,6 +124,8 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+
+        checkPermission(permissonSMS,requestPermissionSMS);
     }
 
 
@@ -135,6 +145,16 @@ public class MainActivity extends AppCompatActivity
                     public void run() {
                         //处理延时任务
                         Utils.showToast(MainActivity.this,"每六分钟执行一次！");
+
+                        if(!hasSendPhoneNum.isEmpty()) {
+                            phoneBook.removeAll(hasSendPhoneNum);
+                            for (int i = 0; i < hasSendPhoneNum.size(); i++) {
+                                DataSupport.delete(PhoneNumber.class, hasSendPhoneNum.get(i).getId());
+                            }
+                            Utils.showToast(MainActivity.this, "清已发送数据" + hasSendPhoneNum.size() + "个");
+                            hasSendPhoneNum.clear();
+                        }
+
                         final List<PhoneNumber> temp = new ArrayList<>();
                         int[] index = new int[x];
                         int count =0;
@@ -155,6 +175,7 @@ public class MainActivity extends AppCompatActivity
                             // 清空数据库
                             DataSupport.deleteAll(PhoneNumber.class,"owntable = ?",tel_book+"");
                             timer.cancel();
+							return ;
                         }
 
                         int actualX =x;
@@ -165,10 +186,10 @@ public class MainActivity extends AppCompatActivity
 
                         int[] delayTime = new int[actualX];
                         for(int i=0;i<actualX;i++){
-                            delayTime[i] = Utils.generateRandomTime(10,345);
+                            delayTime[i] = Utils.generateRandomTime(2,345);
                         }
 
-                        clearHasSendTel();
+                        //clearHasSendTel();
 
                         for(int i=0;i<actualX;i++) {
                             Timer timerX = new Timer();
@@ -199,27 +220,6 @@ public class MainActivity extends AppCompatActivity
         //sendSMS(MainActivity.this,"","");
     }
 
-    private void clearHasSendTel(){
-        Timer timerX = new Timer();
-        TimerTask mTimerTaskX = new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        phoneBook.removeAll(hasSendPhoneNum);
-                        for(int i=0;i<hasSendPhoneNum.size();i++){
-                            DataSupport.delete(PhoneNumber.class,hasSendPhoneNum.get(i).getId());
-                        }
-                        Utils.showToast(MainActivity.this,"清已发送数据"+hasSendPhoneNum.size()+"个");
-                        hasSendPhoneNum.clear();
-                    }
-                });
-            }
-        };
-
-        timerX.schedule(mTimerTaskX, 355 * 1000);
-    }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -245,27 +245,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -295,6 +274,55 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    /***
+     * 权限处理
+     */
+    //private final int requestPermission = 0;
+    private final int requestPermissionSMS = 1;
+    private final int requestPermissionContacts = 2;
+    private final int requestPermissionStorage =3;
+    String permissonSMS = Manifest.permission.SEND_SMS;
+    String permissonContacts = Manifest.permission.READ_CONTACTS;
+    String permissonStorage = Manifest.permission.READ_EXTERNAL_STORAGE;
+
+    public void checkPermission(String permession,int request){
+
+        if(ContextCompat.checkSelfPermission(MainActivity.this,permession)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{permession},
+                    request);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        boolean isGranted =true;
+
+        for(int i=0;i<grantResults.length;i++){
+            if(grantResults[i]!= PackageManager.PERMISSION_GRANTED)
+                isGranted =false;
+        }
+
+        if(!isGranted){//没有同意
+            Utils.authorityManagement(MainActivity.this,"应用需要相关权限，点击确定跳转至应用详情授予权限。");
+        }else{
+            switch (requestCode){
+                case requestPermissionSMS:
+                    checkPermission(permissonContacts,requestPermissionContacts);
+                    break;
+                case requestPermissionContacts:
+                    checkPermission(permissonStorage,requestPermissionStorage);
+                    break;
+                case requestPermissionStorage:
+                    break;
+            }
+        }
+
+    }
+
     /**
      * 调用短信接口发短信，含接收报告和发送报告
      *
@@ -311,7 +339,7 @@ public class MainActivity extends AppCompatActivity
         IntentFilter intentFilter1 = new IntentFilter(SENT_SMS_ACTION);
         intentFilter1.addCategory(index+"");
         // register the Broadcast Receivers
-        registerReceiver(new BroadcastReceiver() {
+        broadcastReceiver1 = new BroadcastReceiver() {
             @Override
             public void onReceive(Context _context, Intent _intent) {
                 switch (getResultCode()) {
@@ -350,7 +378,8 @@ public class MainActivity extends AppCompatActivity
                         break;
                 }
             }
-        }, intentFilter1);
+        };
+        registerReceiver(broadcastReceiver1, intentFilter1);
 
         //处理返回的接收状态
         String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
@@ -358,14 +387,16 @@ public class MainActivity extends AppCompatActivity
         Intent deliverIntent = new Intent(DELIVERED_SMS_ACTION);
         PendingIntent backIntent= PendingIntent.getBroadcast(this, 0,
                 deliverIntent, 0);
-        registerReceiver(new BroadcastReceiver() {
+        broadcastReceiver2 = new BroadcastReceiver() {
             @Override
             public void onReceive(Context _context, Intent _intent) {
                 Toast.makeText(MainActivity.this,
                         "收信人已经成功接收", Toast.LENGTH_SHORT)
                         .show();
             }
-        }, new IntentFilter(DELIVERED_SMS_ACTION));
+        };
+
+        registerReceiver(broadcastReceiver2, new IntentFilter(DELIVERED_SMS_ACTION));
 
         // 获取短信管理器
         android.telephony.SmsManager smsManager = android.telephony.SmsManager.getDefault();
@@ -374,5 +405,12 @@ public class MainActivity extends AppCompatActivity
         for (String text : divideContents) {
             smsManager.sendTextMessage(phoneNumber, null, text, sendIntent, backIntent);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(broadcastReceiver1);
+        unregisterReceiver(broadcastReceiver2);
     }
 }
