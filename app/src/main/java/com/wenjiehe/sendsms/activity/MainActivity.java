@@ -4,11 +4,13 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -21,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -36,28 +39,38 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import static android.R.attr.phoneNumber;
+import static android.R.attr.x;
+import static android.R.attr.y;
+import static com.wenjiehe.sendsms.R.id.sendtime;
 import static com.wenjiehe.sendsms.R.id.spin_one;
+import static com.wenjiehe.sendsms.Utils.generateRandomTime;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemSelectedListener {
 
-    @BindView(spin_one)
+    @BindView(R.id.spin_one)
     Spinner spinner_tel_book;
 
+    @BindView(sendtime)
+    EditText editText_count;
 
     @BindView(R.id.send_sms)
     Button send_sms;
 
     private int tel_book = 0;//0-9 电话本一~十
-    private int sendtime = 0;
+    private int eachHourCount = 0;
+
+    private boolean isSending =false;//正在发送标志位
 
     List<PhoneNumber> phoneBook = new ArrayList<>();
-    Map<String,List<PhoneNumber>> hasSendPhoneNum = new HashMap<>();
+    List<PhoneNumber> hasSendPhoneNum = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +97,128 @@ public class MainActivity extends AppCompatActivity
         send_sms.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                phoneBook = DataSupport.where("owntable = ?",tel_book+"").find(PhoneNumber.class);
-                Utils.showToast(MainActivity.this,tel_book+"-"+sendtime);
+                if(!isSending){
+                    isSending =true;
+                    eachHourCount = Integer.parseInt(editText_count.getText().toString());
+                    phoneBook = DataSupport.where("owntable = ?",tel_book+"").find(PhoneNumber.class);
+                    sendSMSList(phoneBook,eachHourCount);
+                }else{
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("提示")
+                            .setMessage("正在发送短信，请稍后……")
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                            .show();
+                }
+
             }
         });
+    }
+
+
+
+    private void sendSMSList(final List<PhoneNumber> phoneBook,int eachHourCount){
+        final Timer timer = new Timer();
+        final int phoneNum =phoneBook.size();
+        final int x = eachHourCount/10;
+        //final int y = eachHourCount%10;
+        Utils.showToast(MainActivity.this,tel_book+"-"+eachHourCount+"-每6分钟发送"+x+"条");
+
+        TimerTask mTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //处理延时任务
+                        Utils.showToast(MainActivity.this,"每六分钟执行一次！");
+                        final List<PhoneNumber> temp = new ArrayList<>();
+                        int[] index = new int[x];
+                        int count =0;
+                        for(int i=0;i<phoneBook.size();i++){
+                            PhoneNumber phoneNumber = phoneBook.get(i);
+                            if(count<x) {
+                                if (!phoneNumber.isSendSMS()) {
+                                    temp.add(phoneNumber);
+                                    index[count] = i;
+                                    count++;
+                                }
+                            }else
+                                break;
+                        }
+                        if(count==0){
+                            isSending = false;
+                            Utils.showToast(MainActivity.this,"数据库无可用数据！");
+                            // 清空数据库
+                            DataSupport.deleteAll(PhoneNumber.class,"owntable = ?",tel_book+"");
+                            timer.cancel();
+                        }
+
+                        int actualX =x;
+                        if(temp.size()<x){//数据库里只有不到x条数据能发了
+                            actualX =temp.size();
+                            Utils.showToast(MainActivity.this,"数据库里只有"+actualX+"条数据能发了");
+                        }
+
+                        int[] delayTime = new int[actualX];
+                        for(int i=0;i<actualX;i++){
+                            delayTime[i] = Utils.generateRandomTime(10,345);
+                        }
+
+                        clearHasSendTel();
+
+                        for(int i=0;i<actualX;i++) {
+                            Timer timerX = new Timer();
+                            final int tem = index[i];
+                            final String phone = temp.get(i).getNumber();
+                            final String text = "你好啊！！"+i;
+                            TimerTask mTimerTaskX = new TimerTask() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            sendSMS(MainActivity.this,phone,text,tem);
+                                            Utils.showToast(MainActivity.this,"执行！");
+                                        }
+                                    });
+                                }
+                            };
+
+                            timerX.schedule(mTimerTaskX, delayTime[i] * 1000);
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(mTimerTask, 0, 6*60*1000);
+
+        //sendSMS(MainActivity.this,"","");
+    }
+
+    private void clearHasSendTel(){
+        Timer timerX = new Timer();
+        TimerTask mTimerTaskX = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        phoneBook.removeAll(hasSendPhoneNum);
+                        for(int i=0;i<hasSendPhoneNum.size();i++){
+                            DataSupport.delete(PhoneNumber.class,hasSendPhoneNum.get(i).getId());
+                        }
+                        Utils.showToast(MainActivity.this,"清已发送数据"+hasSendPhoneNum.size()+"个");
+                        hasSendPhoneNum.clear();
+                    }
+                });
+            }
+        };
+
+        timerX.schedule(mTimerTaskX, 355 * 1000);
     }
 
     @Override
@@ -164,72 +295,21 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    /*private void send2(String number, String message){
-        String SENT = "sms_sent";
-        String DELIVERED = "sms_delivered";
-
-        PendingIntent sentPI = PendingIntent.getActivity(this, 0, new Intent(SENT), 0);
-        PendingIntent deliveredPI = PendingIntent.getActivity(this, 0, new Intent(DELIVERED), 0);
-
-        registerReceiver(new BroadcastReceiver(){
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                switch(getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        Log.i("====>", "Activity.RESULT_OK");
-                        break;
-                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                        Log.i("====>", "RESULT_ERROR_GENERIC_FAILURE");
-                        break;
-                    case SmsManager.RESULT_ERROR_NO_SERVICE:
-                        Log.i("====>", "RESULT_ERROR_NO_SERVICE");
-                        break;
-                    case SmsManager.RESULT_ERROR_NULL_PDU:
-                        Log.i("====>", "RESULT_ERROR_NULL_PDU");
-                        break;
-                    case SmsManager.RESULT_ERROR_RADIO_OFF:
-                        Log.i("====>", "RESULT_ERROR_RADIO_OFF");
-                        break;
-                }
-            }
-        }, new IntentFilter(SENT));
-
-        registerReceiver(new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context context, Intent intent){
-                switch(getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        Log.i("====>", "RESULT_OK");
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        Log.i("=====>", "RESULT_CANCELED");
-                        break;
-                }
-            }
-        }, new IntentFilter(DELIVERED));
-
-        SmsManager smsm = SmsManager.getDefault();
-        smsm.sendTextMessage(number, null, message, sentPI, deliveredPI);
-    }*/
-
     /**
      * 调用短信接口发短信，含接收报告和发送报告
      *
      * @param phoneNumber
      * @param message
      */
-    public void sendSMS(Context context,String phoneNumber, String message) {
+    public void sendSMS(Context context,String phoneNumber, String message,int index) {
         //处理返回的发送状态
         String SENT_SMS_ACTION = "SENT_SMS_ACTION";
         Intent sentIntent = new Intent(SENT_SMS_ACTION);
-        sentIntent.addCategory(phoneNumber);
+        sentIntent.addCategory(index+"");
         PendingIntent sendIntent= PendingIntent.getBroadcast(this, 0, sentIntent,
                 0);
         IntentFilter intentFilter1 = new IntentFilter(SENT_SMS_ACTION);
-        intentFilter1.addCategory("10086");
+        intentFilter1.addCategory(index+"");
         // register the Broadcast Receivers
         registerReceiver(new BroadcastReceiver() {
             @Override
@@ -239,12 +319,34 @@ public class MainActivity extends AppCompatActivity
                         Toast.makeText(MainActivity.this,
                                 "短信发送成功"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
                                 .show();
+                        int index = Integer.parseInt(_intent.getCategories().iterator().next());
+                        phoneBook.get(index).setSendSMS(true);
+                        hasSendPhoneNum.add(phoneBook.get(index));
                         break;
                     case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        Toast.makeText(MainActivity.this,
+                                "短信发送失败1-"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
+                                .show();
                         break;
                     case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        // TODO: 2017/6/25 暂时认为发送成功
+                        int indexs = Integer.parseInt(_intent.getCategories().iterator().next());
+                        phoneBook.get(indexs).setSendSMS(true);
+                        hasSendPhoneNum.add(phoneBook.get(indexs));
+
+                        Toast.makeText(MainActivity.this,
+                                "短信发送失败2-"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
+                                .show();
                         break;
                     case SmsManager.RESULT_ERROR_NULL_PDU:
+                        Toast.makeText(MainActivity.this,
+                                "短信发送失败3-"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
+                                .show();
+                        break;
+                    default:
+                        Toast.makeText(MainActivity.this,
+                                "短信发送失败4-"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
+                                .show();
                         break;
                 }
             }

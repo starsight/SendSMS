@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.wenjiehe.sendsms.R;
 import com.wenjiehe.sendsms.Utils;
@@ -35,6 +36,7 @@ public class EditTelActivity extends AppCompatActivity {
 
     private boolean hasSave = true;
 
+    private  int hasTelNumber=0;
     //private List<Integer> notTel = new ArrayList<>();
 
     @BindView(R.id.activity_edit_tel_et0)
@@ -81,6 +83,10 @@ public class EditTelActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         phone_book_num = intent.getIntExtra("phonebook", 0);
+        hasTelNumber = intent.getIntExtra("hasTelNumber", 0);
+        if(hasTelNumber>=290){
+            Utils.showToast(EditTelActivity.this,"数据库还能存"+(300-hasTelNumber)+"条数据！");
+        }
     }
 
     private void addTextListener() {
@@ -145,9 +151,21 @@ public class EditTelActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.activity_eit_tel_save:
+                if(hasTelNumber>=300){
+                    Utils.showToast(EditTelActivity.this,"数据库存不下数据了！");
+                    break;
+                }else if(hasTelNumber>=290){
+                    if(newTelList.size()+hasTelNumber>300){
+                        Utils.showToast(EditTelActivity.this,"数据库只能存"+(300-hasTelNumber)+"条数据，请删除列表中多余的数据");
+                        break;
+                    }
+                }
+
                 if (!hasSave) {
                     getPhoneNumberList();
                     if (!newTelList.isEmpty()) {
+                        hasTelNumber +=newTelList.size();//更新现有的数据记录
+
                         DataSupport.saveAll(newTelList);
                         newTelList.clear();
 
@@ -157,6 +175,10 @@ public class EditTelActivity extends AppCompatActivity {
                         hasSave = true;
 
                         Utils.showToast(EditTelActivity.this, "保存成功！");
+
+                        if(hasTelNumber>=290){
+                            Utils.showToast(EditTelActivity.this,"数据库还能存"+(300-hasTelNumber)+"条数据！");
+                        }
                     }else{
                         Utils.showToast(EditTelActivity.this, "请输入号码！");
                     }

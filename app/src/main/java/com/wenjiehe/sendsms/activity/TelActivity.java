@@ -77,6 +77,7 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
             case R.id.activity_tel_settings_edit:
                 Intent intent = new Intent(TelActivity.this,EditTelActivity.class);
                 intent.putExtra("phonebook",phone_book_num);
+                intent.putExtra("hasTelNumber",telList.size());
                 startActivityForResult(intent,1);
                 break;
             case R.id.activity_tel_settings_delete:
