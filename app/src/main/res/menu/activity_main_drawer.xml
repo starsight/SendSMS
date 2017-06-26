@@ -19,6 +19,18 @@
             android:id="@+id/nav_edit_sms"
             android:icon="@mipmap/edit"
             android:title="编辑短信内容"/>
+        <item
+            android:id="@+id/nav_import"
+            android:icon="@mipmap/importtxt"
+            android:title="从文件导入电话"/>
+        <item
+            android:id="@+id/nav_has_send"
+            android:icon="@mipmap/hassend"
+            android:title="已发送列表"/>
+        <item
+            android:id="@+id/nav_exit"
+            android:icon="@mipmap/exit"
+            android:title="退出系统"/>
     </group>
 
     <!--<item android:title="Communicate">-->

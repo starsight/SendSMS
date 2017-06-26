@@ -2,6 +2,9 @@ package com.wenjiehe.sendsms.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.OperationApplicationException;
+import android.net.Uri;
+import android.os.RemoteException;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.wenjiehe.sendsms.R;
+import com.wenjiehe.sendsms.Utils;
 import com.wenjiehe.sendsms.entity.PhoneNumber;
 import com.wenjiehe.sendsms.view.TelRecyclerViewAdapter;
 
@@ -55,6 +59,10 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
         telList = DataSupport.where("owntable = ?",phone_book_num+"").find(PhoneNumber.class);
         //List<PhoneNumber> listAll = DataSupport.findAll(PhoneNumber.class);
 
+        StringBuilder sb = new StringBuilder();
+        String messaage = sb.append("当前数据库有 ").append(telList.size()).append(" 条数据,")
+                .append("还可以添加 ").append(300-telList.size()).append(" 条数据.").toString();
+        Utils.showAlertDialog(TelActivity.this,"提示",messaage);
         setAdapter();
     }
 
@@ -102,6 +110,43 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
 
                 break;
             case R.id.activity_tel_settings_export:
+                new AlertDialog.Builder(TelActivity.this)
+                        .setTitle("提示")
+                        .setMessage("确认把电话本中的数据导入到系统联系人中？")
+                        .setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // TODO: 2017/6/26  删除所有联系人
+                                //Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
+                                //getContentResolver().delete(uri,"_id!=-1", null);
+                                try {
+                                    Utils.batchAddContact(TelActivity.this,telList);
+                                    Utils.showToast(TelActivity.this,"导出数据成功！");
+                                } catch (RemoteException e) {
+
+                                } catch (OperationApplicationException e) {
+                                    new AlertDialog.Builder(TelActivity.this)
+                                            .setTitle("错误")
+                                            .setMessage("添加联系人异常，请确认权限和数据库数据是否正确!")
+                                            .setPositiveButton("好", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+
+                                                }
+                                            })
+                                            .show();
+
+                                    e.printStackTrace();
+                                }
+                            }
+                        })
+                        .setNegativeButton("下次再说", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .show();
                 break;
             default:
                 break;

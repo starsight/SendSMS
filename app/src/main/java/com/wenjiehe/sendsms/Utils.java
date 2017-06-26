@@ -1,19 +1,36 @@
 package com.wenjiehe.sendsms;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AppOpsManager;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.OperationApplicationException;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.RemoteException;
+import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.wenjiehe.sendsms.entity.PhoneNumber;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static android.R.id.list;
 
 /**
  * Created by Administrator on 2017/6/22.
@@ -95,6 +112,72 @@ public class Utils {
                         }).show();
     }
 
+
+    /**
+     * 批量添加通讯录
+     *
+     * @throws OperationApplicationException
+     * @throws RemoteException
+     */
+    public static void batchAddContact(Context mContext,List<PhoneNumber> list)
+            throws RemoteException, OperationApplicationException {
+        //Log.d("[GlobalVariables->]BatchAddContact begin");
+        ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+        int rawContactInsertIndex = 0;
+        for (PhoneNumber contact : list) {
+            rawContactInsertIndex = ops.size(); // 有了它才能给真正的实现批量添加
+
+            ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+                    .withYieldAllowed(true).build());
+
+            // 添加姓名
+            ops.add(ContentProviderOperation
+                    .newInsert(
+                            android.provider.ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.RawContacts.Data.RAW_CONTACT_ID,
+                            rawContactInsertIndex)
+                    .withValue(ContactsContract.RawContacts.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, contact.getName())
+                    .withYieldAllowed(true).build());
+            // 添加号码
+            ops.add(ContentProviderOperation
+                    .newInsert(
+                            android.provider.ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.RawContacts.Data.RAW_CONTACT_ID,
+                            rawContactInsertIndex)
+                    .withValue(ContactsContract.RawContacts.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, contact.getNumber())
+                    .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.LABEL, "").withYieldAllowed(true).build());
+        }
+        if (ops != null) {
+            // 真正添加
+            ContentProviderResult[] results = mContext.getContentResolver()
+                    .applyBatch(ContactsContract.AUTHORITY, ops);
+            // for (ContentProviderResult result : results) {
+            // GlobalConstants
+            // .PrintLog_D("[GlobalVariables->]BatchAddContact "
+            // + result.uri.toString());
+            // }
+        }
+    }
+
+
+    public static void showAlertDialog(Context mContext,String Tittle,String Message){
+        new AlertDialog.Builder(mContext)
+                .setTitle(Tittle)
+                .setMessage(Message)
+                .setPositiveButton("好", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .show();
+
+    }
     public static void showToast(Context context,String str){
         Toast.makeText(context,str,Toast.LENGTH_SHORT).show();
     }
