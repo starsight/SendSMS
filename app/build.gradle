@@ -7,8 +7,8 @@ android {
         applicationId "com.wenjiehe.sendsms"
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "1.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -39,8 +39,8 @@ dependencies {
     compile 'com.jakewharton:butterknife:8.6.0'
     compile 'org.litepal.android:core:1.5.1'
     compile 'com.idescout.sql:sqlscout-server:2.0'
-    compile 'org.jokar:permissiondispatcher:2.0.8'
+    //compile 'org.jokar:permissiondispatcher:2.0.8'
     testCompile 'junit:junit:4.12'
     apt 'com.jakewharton:butterknife-compiler:8.6.0'
-    apt 'org.jokar:permissiondispatcher-processor:2.0.8'
+    //apt 'org.jokar:permissiondispatcher-processor:2.0.8'
 }

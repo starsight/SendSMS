@@ -8,10 +8,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,8 +41,6 @@ import com.wenjiehe.sendsms.entity.PhoneNumber;
 import com.wenjiehe.sendsms.entity.SMSText;
 import com.wenjiehe.sendsms.entity.VertifyCode;
 
-
-import org.jokar.permissiondispatcher.library.PermissionUtils;
 import org.litepal.crud.DataSupport;
 import org.litepal.tablemanager.Connector;
 
@@ -54,6 +54,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 
+import static android.media.CamcorderProfile.get;
 import static com.wenjiehe.sendsms.R.id.sendtime;
 
 public class MainActivity extends AppCompatActivity
@@ -85,9 +86,52 @@ public class MainActivity extends AppCompatActivity
     List<PhoneNumber> phoneBook = new ArrayList<>();
     List<PhoneNumber> hasSendPhoneNum = new ArrayList<>();
     List<SMSText> smsText = new ArrayList<>();
+    List<Integer> sendingList= new ArrayList<>();
 
-    private BroadcastReceiver broadcastReceiver1;
-    private BroadcastReceiver broadcastReceiver2;
+    private BroadcastReceiver broadcastReceiver1 = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context _context, Intent _intent) {
+            int index =0;
+            if(!sendingList.isEmpty()){
+                index = sendingList.get(0);
+                sendingList.remove(0);
+            }else
+                return;
+
+            switch (getResultCode()) {
+                case Activity.RESULT_OK:
+                    sendSMSMessage("短信发送成功-" + index);
+
+                    phoneBook.get(index).setSendSMS(true);
+                    hasSendPhoneNum.add(phoneBook.get(index));
+                    break;
+                case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                    sendSMSMessage("短信发送失败1-" + index);
+                    break;
+                case SmsManager.RESULT_ERROR_RADIO_OFF:
+                    // TODO: 2017/6/25 暂时认为发送成功
+                    //int indexs = Integer.parseInt(index);
+                    phoneBook.get(index).setSendSMS(true);
+                    hasSendPhoneNum.add(phoneBook.get(index));
+                    sendSMSMessage("短信发送失败2-" + index);
+                    break;
+                case SmsManager.RESULT_ERROR_NULL_PDU:
+                    sendSMSMessage("短信发送失败3-" + index);
+                    break;
+                default:
+                    sendSMSMessage("短信发送失败4-" + index);
+                    break;
+            }
+        }
+    };
+    private BroadcastReceiver  broadcastReceiver2 = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context _context, Intent _intent) {
+            Toast.makeText(MainActivity.this,
+                    "收信人已经成功接收", Toast.LENGTH_SHORT)
+                    .show();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +174,7 @@ public class MainActivity extends AppCompatActivity
                     phoneBook = DataSupport.where("owntable = ?", tel_book + "").find(PhoneNumber.class);
                     smsText = DataSupport.findAll(SMSText.class);
                     if(smsText.isEmpty()){
+                        isSending =  false;
                         Utils.showAlertDialog(MainActivity.this,"警告","请先编辑要发送的短信内容！");
                         return ;
                     }
@@ -210,17 +255,18 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        boolean canSMS = PermissionUtils.hasSelfPermissions(MainActivity.this, permissonSMS1, permissonContacts1, permissonStorage, permissonSMS2, permissonContacts2);
+        /*boolean canSMS = PermissionUtils.hasSelfPermissions(MainActivity.this, permissonSMS1, permissonContacts1, permissonStorage, permissonSMS2, permissonContacts2);
         if (!canSMS) {
             Utils.authorityManagement(MainActivity.this, "应用需要相关权限，点击确定跳转至应用详情授予权限。");
-        }
+        }*/
 
+        registerReceiver();
     }
 
     private void sendSMSMessage(String msg) {
 
         if (message != null) {
-            if (message.getLineCount() >= 18) {
+            if (message.getLineCount() >= 40) {
                 message.setText(msg + "\n");
             } else
                 message.append(msg + "\n");
@@ -234,10 +280,10 @@ public class MainActivity extends AppCompatActivity
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(editText_count.getWindowToken(), 0);
 
-        boolean canSMS = PermissionUtils.hasSelfPermissions(MainActivity.this, permissonSMS1, permissonContacts1, permissonStorage, permissonSMS2, permissonContacts2);
+        /*boolean canSMS = PermissionUtils.hasSelfPermissions(MainActivity.this, permissonSMS1, permissonContacts1, permissonStorage, permissonSMS2, permissonContacts2);
         if (!canSMS) {
             Utils.authorityManagement(MainActivity.this, "应用需要相关权限，点击确定跳转至应用详情授予权限。");
-        }
+        }*/
     }
 
     private void sendSMSList(final List<PhoneNumber> phoneBook, int eachHourCount) {
@@ -302,7 +348,7 @@ public class MainActivity extends AppCompatActivity
 
                         int[] delayTime = new int[actualX];
                         for (int i = 0; i < actualX; i++) {
-                            delayTime[i] = Utils.generateRandomTime(2, 345);
+                            delayTime[i] = Utils.generateRandomTime(2, 348);
                         }
 
                         //clearHasSendTel();
@@ -311,7 +357,7 @@ public class MainActivity extends AppCompatActivity
                             Timer timerX = new Timer();
                             final int tem = index[i];
                             final String phone = temp.get(i).getNumber();
-                            final String text = smsText.get(Utils.generateRandomTime(0,smsText.size())-1).getText();
+                            final String text = smsText.get(Utils.generateRandomTime(0,smsText.size())).getText();
                             TimerTask mTimerTaskX = new TimerTask() {
                                 @Override
                                 public void run() {
@@ -365,39 +411,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private long exitTime = 0;
-
-    /**
-     * 捕捉返回事件按钮
-     * <p>
-     * 因为此 Activity 继承 TabActivity 用 onKeyDown 无响应，所以改用 dispatchKeyEvent
-     * 一般的 Activity 用 onKeyDown 就可以了
-     */
-
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
-                this.exitApp();
-            }
-            return true;
-        }
-        return super.dispatchKeyEvent(event);
-    }
-
-    /**
-     * 退出程序
-     */
-    private void exitApp() {
-        // 判断2次点击事件时间
-        if ((System.currentTimeMillis() - exitTime) > 2000) {
-            Toast.makeText(MainActivity.this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
-            exitTime = System.currentTimeMillis();
-        } else {
-            finish();
-        }
-    }
-
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -448,7 +461,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_exit) {
             new Handler().postDelayed(new Runnable() {
                 public void run() {
-                    finish();
+                    System.exit(0);
                 }
             }, 400);
         }
@@ -473,6 +486,9 @@ public class MainActivity extends AppCompatActivity
     //String permissonStorage2 = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
+    String SENT_SMS_ACTION = "SENT_SMS_ACTION";
+    //处理返回的接收状态
+    String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
     /**
      * 调用短信接口发短信，含接收报告和发送报告
      *
@@ -481,64 +497,17 @@ public class MainActivity extends AppCompatActivity
      */
     public void sendSMS(Context context, String phoneNumber, String message, int index) {
         //处理返回的发送状态
-        String SENT_SMS_ACTION = "SENT_SMS_ACTION";
+
         Intent sentIntent = new Intent(SENT_SMS_ACTION);
-        sentIntent.addCategory(index + "");
+
+        sendingList.add(index);//加入正在发送的队列
+
         final PendingIntent sendIntent = PendingIntent.getBroadcast(this, 0, sentIntent,
                 0);
-        IntentFilter intentFilter1 = new IntentFilter(SENT_SMS_ACTION);
-        intentFilter1.addCategory(index + "");
-        // register the Broadcast Receivers
-        broadcastReceiver1 = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context _context, Intent _intent) {
-                switch (getResultCode()) {
-                    case Activity.RESULT_OK:
-                        sendSMSMessage("短信发送成功" + _intent.getCategories().iterator().next());
-//                        Toast.makeText(MainActivity.this,
-//                                "短信发送成功"+_intent.getCategories().iterator().next(), Toast.LENGTH_SHORT)
-//                                .show();
-                        int index = Integer.parseInt(_intent.getCategories().iterator().next());
-                        phoneBook.get(index).setSendSMS(true);
-                        hasSendPhoneNum.add(phoneBook.get(index));
-                        break;
-                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                        sendSMSMessage("短信发送失败1-" + _intent.getCategories().iterator().next());
-                        break;
-                    case SmsManager.RESULT_ERROR_RADIO_OFF:
-                        // TODO: 2017/6/25 暂时认为发送成功
-                        int indexs = Integer.parseInt(_intent.getCategories().iterator().next());
-                        phoneBook.get(indexs).setSendSMS(true);
-                        hasSendPhoneNum.add(phoneBook.get(indexs));
-                        sendSMSMessage("短信发送失败2-" + _intent.getCategories().iterator().next());
-                        break;
-                    case SmsManager.RESULT_ERROR_NULL_PDU:
-                        sendSMSMessage("短信发送失败3-" + _intent.getCategories().iterator().next());
-                        break;
-                    default:
-                        sendSMSMessage("短信发送失败4-" + _intent.getCategories().iterator().next());
-                        break;
-                }
-            }
-        };
-        registerReceiver(broadcastReceiver1, intentFilter1);
-
-        //处理返回的接收状态
-        String DELIVERED_SMS_ACTION = "DELIVERED_SMS_ACTION";
         // create the deilverIntent parameter
         Intent deliverIntent = new Intent(DELIVERED_SMS_ACTION);
         PendingIntent backIntent = PendingIntent.getBroadcast(this, 0,
                 deliverIntent, 0);
-        broadcastReceiver2 = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context _context, Intent _intent) {
-                Toast.makeText(MainActivity.this,
-                        "收信人已经成功接收", Toast.LENGTH_SHORT)
-                        .show();
-            }
-        };
-
-        registerReceiver(broadcastReceiver2, new IntentFilter(DELIVERED_SMS_ACTION));
 
         // 获取短信管理器
         android.telephony.SmsManager smsManager = android.telephony.SmsManager.getDefault();
@@ -552,7 +521,47 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver1);
-        unregisterReceiver(broadcastReceiver2);
+        // TODO: 2017/6/27
+        if(broadcastReceiver1!=null)
+            unregisterReceiver(broadcastReceiver1);
+        if(broadcastReceiver2!=null)
+            unregisterReceiver(broadcastReceiver2);
+    }
+    private long exitTime = 0;
+
+    /**
+     * 捕捉返回事件按钮
+     * <p>
+     * 因为此 Activity 继承 TabActivity 用 onKeyDown 无响应，所以改用 dispatchKeyEvent
+     * 一般的 Activity 用 onKeyDown 就可以了
+     */
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                this.exitApp();
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    /**
+     * 退出程序
+     */
+    private void exitApp() {
+        // 判断2次点击事件时间
+        if ((System.currentTimeMillis() - exitTime) > 2000) {
+            Toast.makeText(MainActivity.this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+            exitTime = System.currentTimeMillis();
+        } else {
+            System.exit(0);
+        }
+    }
+
+    void registerReceiver(){
+        registerReceiver(broadcastReceiver1, new IntentFilter(SENT_SMS_ACTION));
+        registerReceiver(broadcastReceiver2, new IntentFilter(DELIVERED_SMS_ACTION));
     }
 }

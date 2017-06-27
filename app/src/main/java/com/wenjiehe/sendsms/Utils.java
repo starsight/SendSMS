@@ -184,11 +184,11 @@ public class Utils {
 
     public static String generatePass(){
         StringBuilder sb = new StringBuilder();
-        sb.append(generateRandomTime(9,99)+"-");
-        sb.append(generateRandomTime(9,99)+"-");
-        sb.append(generateRandomTime(9,99)+"-");
-        sb.append(generateRandomTime(9,99)+"-");
-        sb.append(generateRandomTime(9,99));
+        sb.append(generateRandomTime(10,100)+"-");
+        sb.append(generateRandomTime(10,100)+"-");
+        sb.append(generateRandomTime(10,100)+"-");
+        sb.append(generateRandomTime(10,100)+"-");
+        sb.append(generateRandomTime(10,100));
         return sb.toString();
     }
 

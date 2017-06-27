@@ -84,8 +84,8 @@
                 android:maxLines="20"
                 android:scrollbars="vertical"
                 android:textColor="#c2218d"
-                android:layout_marginEnd="60dp"
-                android:layout_marginStart="60dp"
+                android:layout_marginEnd="50dp"
+                android:layout_marginStart="50dp"
                 />
 
         </LinearLayout>
