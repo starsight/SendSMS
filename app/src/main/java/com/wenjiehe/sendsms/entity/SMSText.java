@@ -1,10 +1,12 @@
 package com.wenjiehe.sendsms.entity;
 
+import org.litepal.crud.DataSupport;
+
 /**
  * Created by Administrator on 2017/6/26.
  */
 
-public class SMSText {
+public class SMSText extends DataSupport {
     private int id;
     private String text;
 

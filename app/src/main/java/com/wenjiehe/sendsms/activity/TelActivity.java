@@ -59,10 +59,6 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
         telList = DataSupport.where("owntable = ?",phone_book_num+"").find(PhoneNumber.class);
         //List<PhoneNumber> listAll = DataSupport.findAll(PhoneNumber.class);
 
-        StringBuilder sb = new StringBuilder();
-        String messaage = sb.append("当前数据库有 ").append(telList.size()).append(" 条数据,")
-                .append("还可以添加 ").append(300-telList.size()).append(" 条数据.").toString();
-        Utils.showAlertDialog(TelActivity.this,"提示",messaage);
         setAdapter();
     }
 
@@ -112,7 +108,7 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
             case R.id.activity_tel_settings_export:
                 new AlertDialog.Builder(TelActivity.this)
                         .setTitle("提示")
-                        .setMessage("确认把电话本中的数据导入到系统联系人中？")
+                        .setMessage("将会删除系统中的联系人，确认把电话本中的数据导入到系统联系人中？")
                         .setPositiveButton("确认", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -147,6 +143,12 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
                             }
                         })
                         .show();
+                break;
+            case R.id.activity_tel_settings_detail:
+                StringBuilder sb = new StringBuilder();
+                String messaage = sb.append("当前数据库有 ").append(telList.size()).append(" 条数据,")
+                        .append("还可以添加 ").append(300-telList.size()).append(" 条数据.").toString();
+                Utils.showAlertDialog(TelActivity.this,"详情",messaage);
                 break;
             default:
                 break;

@@ -3,6 +3,7 @@ package com.wenjiehe.sendsms;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AppOpsManager;
+import android.app.Dialog;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.Context;
@@ -37,6 +38,7 @@ import static android.R.id.list;
  */
 
 public class Utils {
+    public static final String correctPassward ="yongheng";
     /**
      * 验证手机号码
      * @param phoneNumber 手机号码
@@ -95,11 +97,12 @@ public class Utils {
                 .setPositiveButton(android.R.string.ok,new DialogInterface.OnClickListener(){
                     public void onClick(DialogInterface dialog,
                                         int which) {
+                        dialog.dismiss();
+
                         Intent intent = new Intent();
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
                         intent.setData(Uri.fromParts("package", context.getPackageName(), null));
-
                         context.startActivity(intent);
                     }
                 })
@@ -178,6 +181,17 @@ public class Utils {
                 .show();
 
     }
+
+    public static String generatePass(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(generateRandomTime(9,99)+"-");
+        sb.append(generateRandomTime(9,99)+"-");
+        sb.append(generateRandomTime(9,99)+"-");
+        sb.append(generateRandomTime(9,99)+"-");
+        sb.append(generateRandomTime(9,99));
+        return sb.toString();
+    }
+
     public static void showToast(Context context,String str){
         Toast.makeText(context,str,Toast.LENGTH_SHORT).show();
     }

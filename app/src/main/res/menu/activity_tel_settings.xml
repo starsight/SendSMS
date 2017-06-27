@@ -3,5 +3,6 @@
 <item android:id="@+id/activity_tel_settings_edit" android:title="编辑电话本"/>
 <item android:id="@+id/activity_tel_settings_delete" android:title="删除所有电话"/>
 <item android:id="@+id/activity_tel_settings_export" android:title="导出到系统电话"/>
+<item android:id="@+id/activity_tel_settings_detail" android:title="详情"/>
 
 </menu>

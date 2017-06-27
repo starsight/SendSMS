@@ -41,6 +41,8 @@
         </activity>
         <activity android:name=".activity.EditSMSTextActivity">
         </activity>
+        <activity android:name=".activity.ImportActivity">
+        </activity>
     </application>
 
 </manifest>
