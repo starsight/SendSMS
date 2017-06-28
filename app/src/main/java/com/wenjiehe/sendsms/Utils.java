@@ -38,7 +38,7 @@ import static android.R.id.list;
  */
 
 public class Utils {
-    public static final String correctPassward ="yongheng";
+    public static final String correctPassward ="ZGANGwei-576#*#zhangWEI";
     /**
      * 验证手机号码
      * @param phoneNumber 手机号码

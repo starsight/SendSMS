@@ -110,26 +110,29 @@ public class MainActivity extends AppCompatActivity
                     hasSendPhoneNum.add(phoneBook.get(index));
                     break;
                 case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                    Utils.showToast(MainActivity.this, "短信发送失败1-" + index);
                     sendSMSMessage("短信发送失败1-" + index);
                     break;
                 case SmsManager.RESULT_ERROR_RADIO_OFF:
                     // TODO: 2017/6/25 暂时认为发送成功
 
-                    phoneBook.get(index).setSendSMS(true);
+                    /*phoneBook.get(index).setSendSMS(true);
                     phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
                     phoneBook.get(index).save();
-                    hasSendPhoneNum.add(phoneBook.get(index));
-
+                    hasSendPhoneNum.add(phoneBook.get(index));*/
+                    Utils.showToast(MainActivity.this, "短信发送失败2-" + index);
                     //int indexs = Integer.parseInt(index);
                     //phoneBook.get(index).setSendSMS(true);
                     //hasSendPhoneNum.add(phoneBook.get(index));
                     sendSMSMessage("短信发送失败2-" + index);
                     break;
                 case SmsManager.RESULT_ERROR_NULL_PDU:
+                    Utils.showToast(MainActivity.this, "短信发送失败3-" + index);
                     sendSMSMessage("短信发送失败3-" + index);
                     break;
                 default:
                     sendSMSMessage("短信发送失败4-" + index);
+                    Utils.showToast(MainActivity.this, "短信发送失败4-" + index);
                     break;
             }
         }
