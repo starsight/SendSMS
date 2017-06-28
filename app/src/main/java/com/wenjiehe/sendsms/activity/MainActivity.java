@@ -103,6 +103,10 @@ public class MainActivity extends AppCompatActivity
                     sendSMSMessage("短信发送成功-" + index);
 
                     phoneBook.get(index).setSendSMS(true);
+
+                    phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
+                    phoneBook.get(index).save();
+
                     hasSendPhoneNum.add(phoneBook.get(index));
                     break;
                 case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
@@ -110,9 +114,15 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case SmsManager.RESULT_ERROR_RADIO_OFF:
                     // TODO: 2017/6/25 暂时认为发送成功
-                    //int indexs = Integer.parseInt(index);
+
                     phoneBook.get(index).setSendSMS(true);
+                    phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
+                    phoneBook.get(index).save();
                     hasSendPhoneNum.add(phoneBook.get(index));
+
+                    //int indexs = Integer.parseInt(index);
+                    //phoneBook.get(index).setSendSMS(true);
+                    //hasSendPhoneNum.add(phoneBook.get(index));
                     sendSMSMessage("短信发送失败2-" + index);
                     break;
                 case SmsManager.RESULT_ERROR_NULL_PDU:
@@ -127,9 +137,7 @@ public class MainActivity extends AppCompatActivity
     private BroadcastReceiver  broadcastReceiver2 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context _context, Intent _intent) {
-            Toast.makeText(MainActivity.this,
-                    "收信人已经成功接收", Toast.LENGTH_SHORT)
-                    .show();
+            sendSMSMessage("收信人已经成功接收");
         }
     };
 
@@ -266,7 +274,7 @@ public class MainActivity extends AppCompatActivity
     private void sendSMSMessage(String msg) {
 
         if (message != null) {
-            if (message.getLineCount() >= 40) {
+            if (message.getLineCount() >= 20) {
                 message.setText(msg + "\n");
             } else
                 message.append(msg + "\n");
@@ -277,8 +285,8 @@ public class MainActivity extends AppCompatActivity
     protected void onRestart() {
         super.onRestart();
 
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(editText_count.getWindowToken(), 0);
+        //InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(editText_count.getWindowToken(), 0);
 
         /*boolean canSMS = PermissionUtils.hasSelfPermissions(MainActivity.this, permissonSMS1, permissonContacts1, permissonStorage, permissonSMS2, permissonContacts2);
         if (!canSMS) {
@@ -306,10 +314,10 @@ public class MainActivity extends AppCompatActivity
                         sendSMSMessage("每六分钟执行一次！");
                         if (!hasSendPhoneNum.isEmpty()) {
                             phoneBook.removeAll(hasSendPhoneNum);
-                            for (int i = 0; i < hasSendPhoneNum.size(); i++) {
+                            /*for (int i = 0; i < hasSendPhoneNum.size(); i++) {
                                 hasSendPhoneNum.get(i).setOwnTable(12);//13号表为已发送的短信列表
                                 hasSendPhoneNum.get(i).save();
-                            }
+                            }*/
                             sendSMSMessage("清除已发送数据" + hasSendPhoneNum.size() + "个");
                             Utils.showToast(MainActivity.this, "清除已发送数据" + hasSendPhoneNum.size() + "个");
                             hasSendPhoneNum.clear();
@@ -521,7 +529,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // TODO: 2017/6/27
         if(broadcastReceiver1!=null)
             unregisterReceiver(broadcastReceiver1);
         if(broadcastReceiver2!=null)

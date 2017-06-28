@@ -112,9 +112,8 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
                         .setPositiveButton("确认", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // TODO: 2017/6/26  删除所有联系人
-                                //Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
-                                //getContentResolver().delete(uri,"_id!=-1", null);
+                                Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
+                                getContentResolver().delete(uri,"_id!=-1", null);
                                 try {
                                     Utils.batchAddContact(TelActivity.this,telList);
                                     Utils.showToast(TelActivity.this,"导出数据成功！");
@@ -124,14 +123,8 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
                                     new AlertDialog.Builder(TelActivity.this)
                                             .setTitle("错误")
                                             .setMessage("添加联系人异常，请确认权限和数据库数据是否正确!")
-                                            .setPositiveButton("好", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-
-                                                }
-                                            })
+                                            .setPositiveButton("好",null)
                                             .show();
-
                                     e.printStackTrace();
                                 }
                             }
