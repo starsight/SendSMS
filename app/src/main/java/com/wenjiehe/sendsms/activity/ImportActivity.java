@@ -96,7 +96,7 @@ public class ImportActivity extends AppCompatActivity implements TelRecyclerView
 
             case R.id.activity_import_detail:
                 StringBuilder sb = new StringBuilder();
-                String messaage = sb.append("当前数据库有 ").append(mData.size()).append(" 条数据,").toString();
+                String messaage = sb.append("当前数据库有 ").append(mData.size()).append(" 条数据.").toString();
                 Utils.showAlertDialog(ImportActivity.this,"详情",messaage);
                 break;
             default:

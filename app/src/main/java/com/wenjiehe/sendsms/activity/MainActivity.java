@@ -55,6 +55,7 @@ import butterknife.ButterKnife;
 
 
 import static android.media.CamcorderProfile.get;
+import static com.wenjiehe.sendsms.R.id.all;
 import static com.wenjiehe.sendsms.R.id.sendtime;
 
 public class MainActivity extends AppCompatActivity
@@ -75,6 +76,10 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.spinner_one_tip)
     TextView spinner_tel_book_tip;
 
+    @BindView(R.id.sendObjectSMS)
+    EditText editText_ObjectSMS;
+
+
     ImageView header;
     TextView hasVertified;
 
@@ -88,6 +93,9 @@ public class MainActivity extends AppCompatActivity
     List<SMSText> smsText = new ArrayList<>();
     List<Integer> sendingList= new ArrayList<>();
 
+    private int allSendNum= 0;
+    private boolean hasSendObject=false;
+
     private BroadcastReceiver broadcastReceiver1 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context _context, Intent _intent) {
@@ -95,19 +103,27 @@ public class MainActivity extends AppCompatActivity
             if(!sendingList.isEmpty()){
                 index = sendingList.get(0);
                 sendingList.remove(0);
-            }else
-                return;
+            }
 
             switch (getResultCode()) {
                 case Activity.RESULT_OK:
                     sendSMSMessage("短信发送成功-" + index);
 
-                    phoneBook.get(index).setSendSMS(true);
+                    if((allSendNum%15)==0&&!hasSendObject){
+                        hasSendObject =true;
+                        String objectSMS =editText_ObjectSMS.getText().toString();
+                        if(Utils.checkPhoneNumber(objectSMS))
+                            sendSMS(objectSMS,"发送成功！",-1);
+                    }else {
+                        allSendNum++;//发送短信总数
+                        hasSendObject =false;
 
-                    phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
-                    phoneBook.get(index).save();
+                        phoneBook.get(index).setSendSMS(true);
+                        phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
+                        phoneBook.get(index).save();
+                        hasSendPhoneNum.add(phoneBook.get(index));
+                    }
 
-                    hasSendPhoneNum.add(phoneBook.get(index));
                     break;
                 case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
                     Utils.showToast(MainActivity.this, "短信发送失败1-" + index);
@@ -115,15 +131,7 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case SmsManager.RESULT_ERROR_RADIO_OFF:
                     // TODO: 2017/6/25 暂时认为发送成功
-
-                    /*phoneBook.get(index).setSendSMS(true);
-                    phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
-                    phoneBook.get(index).save();
-                    hasSendPhoneNum.add(phoneBook.get(index));*/
                     Utils.showToast(MainActivity.this, "短信发送失败2-" + index);
-                    //int indexs = Integer.parseInt(index);
-                    //phoneBook.get(index).setSendSMS(true);
-                    //hasSendPhoneNum.add(phoneBook.get(index));
                     sendSMSMessage("短信发送失败2-" + index);
                     break;
                 case SmsManager.RESULT_ERROR_NULL_PDU:
@@ -191,6 +199,7 @@ public class MainActivity extends AppCompatActivity
                     }
 
                     sendSMSList(phoneBook, eachHourCount);
+
                 } else {
                     new AlertDialog.Builder(MainActivity.this)
                             .setTitle("提示")
@@ -277,7 +286,7 @@ public class MainActivity extends AppCompatActivity
     private void sendSMSMessage(String msg) {
 
         if (message != null) {
-            if (message.getLineCount() >= 20) {
+            if (message.getLineCount() >= 16) {
                 message.setText(msg + "\n");
             } else
                 message.append(msg + "\n");
@@ -298,6 +307,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendSMSList(final List<PhoneNumber> phoneBook, int eachHourCount) {
+        allSendNum =0;
 
         final Timer timer = new Timer();
         final int phoneNum = phoneBook.size();
@@ -375,7 +385,7 @@ public class MainActivity extends AppCompatActivity
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            sendSMS(MainActivity.this, phone, text, tem);
+                                            sendSMS(phone, text, tem);
                                             sendSMSMessage("发送短信！");
                                             sendSMSMessage(text);
                                             //Utils.showToast(MainActivity.this,"发送短信！");
@@ -383,7 +393,6 @@ public class MainActivity extends AppCompatActivity
                                     });
                                 }
                             };
-
                             timerX.schedule(mTimerTaskX, delayTime[i] * 1000);
                         }
                     }
@@ -506,12 +515,13 @@ public class MainActivity extends AppCompatActivity
      * @param phoneNumber
      * @param message
      */
-    public void sendSMS(Context context, String phoneNumber, String message, int index) {
+    public void sendSMS(String phoneNumber, String message, int index) {
         //处理返回的发送状态
 
         Intent sentIntent = new Intent(SENT_SMS_ACTION);
 
-        sendingList.add(index);//加入正在发送的队列
+        if(index>=0)
+            sendingList.add(index);//加入正在发送的队列
 
         final PendingIntent sendIntent = PendingIntent.getBroadcast(this, 0, sentIntent,
                 0);
