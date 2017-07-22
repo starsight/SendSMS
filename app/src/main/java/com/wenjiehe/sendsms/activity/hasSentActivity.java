@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.wenjiehe.sendsms.R;
+import com.wenjiehe.sendsms.Utils;
 import com.wenjiehe.sendsms.entity.PhoneNumber;
 
 import org.litepal.crud.DataSupport;
@@ -107,6 +108,14 @@ public class hasSentActivity extends AppCompatActivity {
                         }).show();
 
                 break;
+
+            case R.id.activity_has_sent_detail:
+            {
+                StringBuilder sb = new StringBuilder();
+                String messaage = sb.append("当前数据库有 ").append(telList.size()).append(" 条数据.").toString();
+                Utils.showAlertDialog(hasSentActivity.this,"详情",messaage);
+                break;
+            }
 
         }
         return super.onOptionsItemSelected(item);

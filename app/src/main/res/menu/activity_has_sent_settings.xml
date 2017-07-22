@@ -1,4 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/activity_has_sent_delete" android:title="清空" app:showAsAction="always"/>
+    <item android:id="@+id/activity_has_sent_detail" android:title="详情" app:showAsAction="never"/>
 </menu>

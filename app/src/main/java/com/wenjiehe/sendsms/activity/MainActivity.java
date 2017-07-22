@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -131,6 +132,26 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case SmsManager.RESULT_ERROR_RADIO_OFF:
                     // TODO: 2017/6/25 暂时认为发送成功
+
+    /*                Vibrator  vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+                    long [] pattern = {100,400,100,400};   // 停止 开启 停止 开启
+                    vibrator.vibrate(pattern,-1);           //重复两次上面的pattern 如果只想震动一次，index设-1
+*/
+                    /*if((allSendNum%15)==0&&!hasSendObject){
+                        hasSendObject =true;
+                        String objectSMS =editText_ObjectSMS.getText().toString();
+                        if(Utils.checkPhoneNumber(objectSMS))
+                            sendSMS(objectSMS,"发送成功！",-1);
+                    }else {
+                        allSendNum++;//发送短信总数
+                        hasSendObject =false;
+
+                        phoneBook.get(index).setSendSMS(true);
+                        phoneBook.get(index).setOwnTable(12);//13号表为已发送的短信列表
+                        phoneBook.get(index).save();
+                        hasSendPhoneNum.add(phoneBook.get(index));
+                    }*/
+
                     Utils.showToast(MainActivity.this, "短信发送失败2-" + index);
                     sendSMSMessage("短信发送失败2-" + index);
                     break;
