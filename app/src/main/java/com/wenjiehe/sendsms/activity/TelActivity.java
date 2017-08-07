@@ -112,8 +112,8 @@ public class TelActivity extends AppCompatActivity  implements TelRecyclerViewAd
                         .setPositiveButton("确认", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
-                                getContentResolver().delete(uri,"_id!=-1", null);
+                                //Uri uri = Uri.parse("content://com.android.contacts/raw_contacts");
+                                //getContentResolver().delete(uri,"_id!=-1", null);
                                 try {
                                     Utils.batchAddContact(TelActivity.this,telList);
                                     Utils.showToast(TelActivity.this,"导出数据成功！");
